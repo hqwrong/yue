@@ -1,7 +1,7 @@
 #! /usr/bin/python2
 
-from bottle import request, Bottle, abort
-import random
+from bottle import request, Bottle, abort, view
+import random, string
 
 app = Bottle()
 
@@ -30,18 +30,23 @@ def handle_ws(wsock, room):
             if not room["members"]:
                 del rooms["rid"]
 
-@app.view("index")
 @app.route("/")
+@view("index")
 def index():
     return {}
 
-@app.view("room")
+@app.route("/test")
+@view("room")
+def test_room():
+    return {"rid":123, "nmember":3}
+
 @app.route("/create")
+@view("room")
 def create_room():
     return {"rid": gen_rid(), "nmember": 1}
 
-@app.view("room")
 @app.route("/room/<rid>")
+@view("room")
 def enter_room():
     if rid not in rooms:
         abort(400, "room doesn't existed.")
@@ -57,7 +62,6 @@ def room_websocket():
     room["members"].append(wsock)
 
     handle_ws(wsock, room)
-
 
 from gevent.pywsgi import WSGIServer
 from geventwebsocket import WebSocketError
