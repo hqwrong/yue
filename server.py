@@ -1,18 +1,23 @@
 #! /usr/bin/python2
 
 from bottle import request, Bottle, abort
+import random
+
 app = Bottle()
 
-@app.route("/")
-def index():
-    pass
-    
-@app.route('/websocket')
-def handle_websocket():
-    wsock = request.environ.get('wsgi.websocket')
-    if not wsock:
-        abort(400, 'Expected WebSocket request.')
+rooms = {}
 
+RID = 1000
+alnums = string.ascii_uppercase + string.digits
+def gen_rid():
+    RID += 1
+    return "".join(random.choice(alnums) for _ in range(10)) + RID
+
+def new_room(rid):
+    rooms[rid] = {"members":[]}
+    return rooms[rid]
+
+def handle_ws(wsock, room):
     while True:
         try:
             message = wsock.receive()
@@ -20,6 +25,39 @@ def handle_websocket():
             wsock.send(message)
         except WebSocketError:
             break
+        finally:
+            room["members"].remove(wsock)
+            if not room["members"]:
+                del rooms["rid"]
+
+@app.view("index")
+@app.route("/")
+def index():
+    return {}
+
+@app.view("room")
+@app.route("/create")
+def create_room():
+    return {"rid": gen_rid(), "nmember": 1}
+
+@app.view("room")
+@app.route("/room/<rid>")
+def enter_room():
+    if rid not in rooms:
+        abort(400, "room doesn't existed.")
+    return {"rid":rid, "nmember":len(rooms["members"])+1}
+
+@app.route('/websocket/<rid>')
+def room_websocket():
+    wsock = request.environ.get('wsgi.websocket')
+    if not wsock:
+        abort(400, 'Expected WebSocket request.')
+
+    room = rooms.get(rid) or new_room(rid)
+    room["members"].append(wsock)
+
+    handle_ws(wsock, room)
+
 
 from gevent.pywsgi import WSGIServer
 from geventwebsocket import WebSocketError
