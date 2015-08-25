@@ -36,12 +36,11 @@
 		</script>
 		<link type="text/css" href="css/ui-lightness/jquery-ui-1.8.13.custom.css" rel="stylesheet" />
 		<link type="text/css" href="css/main.css" rel="stylesheet" />
-		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js"></script>
-		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.13/jquery-ui.min.js"></script>
+		<script type="text/javascript" src="http://lib.sinaapp.com/js/jquery/1.7.2/jquery.min.js"></script>
+		<script type="text/javascript" src="http://lib.sinaapp.com/js/jquery-ui/1.9.2/jquery-ui.min.js"></script>
 		<script type="text/javascript" src="js/jquery.jstree.js"></script>
 		<script type="text/javascript" src="js/ui.js"></script>
 		<script type="text/javascript" src="js/controllers.js"></script>
-		<script type="text/javascript" src="js/yue.js"></script>
 		<script type="text/javascript">
 		//<![CDATA[
 			var pollStatus	=	true;
@@ -188,8 +187,6 @@
 					}
 				});
 				$('#viewContainer').animate({height: 'toggle'});
-
-				yue_connect();
 			});
 			/* delay script loading so we won't block if we have no net access */
 			$.getScript('http://releases.flowplayer.org/js/flowplayer-3.2.6.min.js', function(data, textStatus){
@@ -248,11 +245,70 @@
 					<li id="buttonRefresh" class="button ui-widget ui-state-default ui-corner-all" title="<?vlc gettext("Refresh List") ?>"><span class="ui-icon ui-icon-arrowrefresh-1-n"></span><?vlc gettext("Refresh List") ?></li>
 				</ul>
 				<div id="libraryTree" class="ui-widget-content"></div>
-			</div>
-			<div id="viewContainer" class="ui-widget">
-				<div id="mediaViewer" class="ui-widget-content">
+
+                <div id="yue-area">
+                  <style>
+                    .yue-button {
+                        background-color: #DF6558;
+                        font-weight: bold;
+                        padding: 10px 15px;
+                        display: inline-block;
+                        margin: 10px;
+                        border-radius: 10px;
+                        border: 2px solid #DF6558;
+                        font-size: 22px;
+                    }
+                    #yue-room-banner {
+                       margin: 5px;
+                       font-weight: bold;
+                    }
+                    #chat-input {
+                        background: padding-box #fff;
+                        width: 100%;
+                        font-size: 20px;
+                        line-height: 1.2rem;
+                        border: 4px solid #339966;
+                        font-family: Lato,appleLogo,sans-serif;
+                        margin: 0;
+                        color: #3d3c40;
+                        box-shadow: none;
+                        outline: 0;
+                        bottom: 0;
+                        transition: none;
+                        border-radius: 10px;
+                    }
+                    #msgs-holder {
+                        padding: 0 18px 1rem 1.5rem;
+                        width: 100%;
+                        height: 300px;
+                        margin: 0;
+                        clear: both;
+                        overflow:scroll;
+                    }
+                    .msg-content {
+                        margin-top: 5px;
+                        margin-bottom: 5px;
+                        clear:both;
+                        float:left;
+                    }
+                  </style>
+                  <div id="yue-room-buttons">
+                    <a href="#" class="yue-button " id="create_room"> 创建房间 </a>
+                    <a href="#" class="yue-button" id="enter_room"> 进入房间 </a>
+                  </div>
+
+                  <div id="yue-room-msgs">
+                    <p id="yue-room-banner"> </p>
+                    <div><input type="text" id="chat-input" maxlength="" aria-label="Message input for Channel #general" autocorrect="off" autocomplete="off" spellcheck="true" value="type text here..." style="overflow-y: hidden; height: 38px;"/ ></div>
+                      <div id="msgs-holder"> </div>
+                    </div>
+                  </div>
+			    </div>
+
+			    <div id="viewContainer" class="ui-widget">
+				  <div id="mediaViewer" class="ui-widget-content">
 					<div href="http://localhost:8081/stream.flv" style="display:block; width:100%" id="player">
-						<p><?vlc gettext("Loading flowplayer...") ?><br/><?vlc gettext("If nothing appears, check your internet connection.") ?></p>
+					  <p><?vlc gettext("Loading flowplayer...") ?><br/><?vlc gettext("If nothing appears, check your internet connection.") ?></p>
 					</div>
 				</div>
 			</div>
@@ -286,5 +342,16 @@
 
 		dialogs("browse_window.html","stream_window.html","create_stream.html","offset_window.html","mosaic_window.html","equalizer_window.html","batch_window.html","error_window.html");
 		?>
+
+        <script src="http://localhost:4000/static/yue.js"> </script>
+
+        <script>
+          $("#libraryTree").hide()
+          $(".footer").hide()
+          $("#buttonszone1").hide()
+          $("#buttonszone2").hide()    
+
+          $("#yue-room-msgs").hide()
+        </script>
 	</body>
 </html>

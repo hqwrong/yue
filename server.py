@@ -1,59 +1,67 @@
 #! /usr/bin/python2
 
-from bottle import request, Bottle, abort, view
+from bottle import request, Bottle, abort, view, static_file, response
 import random, string
 
 app = Bottle()
 
 rooms = {}
 
-RID = 1000
+G = {"rid":1000}
 alnums = string.ascii_uppercase + string.digits
+
+def random_color():
+    r = lambda: random.randint(10,255)
+    return '#%02X%02X%02X' % (r(),r(),r())
+
 def gen_rid():
-    RID += 1
-    return "".join(random.choice(alnums) for _ in range(10)) + RID
+    G["rid"] += 1
+    return "".join(random.choice(alnums) for _ in range(10)) + str(G["rid"])
 
 def new_room(rid):
     rooms[rid] = {"members":[]}
     return rooms[rid]
 
-def handle_ws(wsock, room):
+def handle_ws(wsock, rid):
+    room = rooms[rid]
     while True:
         try:
             message = wsock.receive()
-            print "recv:", message
-            wsock.send(message)
-        except WebSocketError:
+	    for w in room["members"]:
+            	w.send(message)
+        except:
             break
-        finally:
-            room["members"].remove(wsock)
-            if not room["members"]:
-                del rooms["rid"]
+
+    room["members"].remove(wsock)
+    if not room["members"]:
+        del rooms[rid]
+
+@app.hook('after_request')
+def enable_cors():
+    response.headers['Access-Control-Allow-Origin'] = '*'
 
 @app.route("/")
 @view("index")
 def index():
     return {}
 
-@app.route("/test")
-@view("room")
-def test_room():
-    return {"rid":123, "nmember":3}
-
+@app.route("/static/<path:path>")
+def handle_static(path):
+    return static_file(path, root="./static/")
+    
 @app.route("/create")
-@view("room")
 def create_room():
-    return {"rid": gen_rid(), "nmember": 1}
+    return {"rid": gen_rid(), "color":random_color()}
 
-@app.route("/room/<rid>")
-@view("room")
-def enter_room():
-    if rid not in rooms:
-        abort(400, "room doesn't existed.")
-    return {"rid":rid, "nmember":len(rooms["members"])+1}
+@app.route("/enter_room/<rid>")
+def enter_room(rid):
+    if rooms.get(rid) == None:
+        return {"ok":False}
+    else:
+        return {"ok":True, "color":random_color()}
 
 @app.route('/websocket/<rid>')
-def room_websocket():
+def room_websocket(rid):
     wsock = request.environ.get('wsgi.websocket')
     if not wsock:
         abort(400, 'Expected WebSocket request.')
@@ -61,11 +69,13 @@ def room_websocket():
     room = rooms.get(rid) or new_room(rid)
     room["members"].append(wsock)
 
-    handle_ws(wsock, room)
+    handle_ws(wsock, rid)
 
 from gevent.pywsgi import WSGIServer
 from geventwebsocket import WebSocketError
 from geventwebsocket.handler import WebSocketHandler
-server = WSGIServer(("0.0.0.0", 8000), app,
+server = WSGIServer(("0.0.0.0", 4000), app,
                     handler_class=WebSocketHandler)
+
+print "listen", 4000
 server.serve_forever()
