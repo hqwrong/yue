@@ -1,7 +1,6 @@
 var ws = null;
 var mycolor = null;
-//srv = "116.251.209.204:4000"
-srv = "localhost:4000"
+srv = "116.251.209.204:4000"
 
 vlcCommand = sendCommand
 
